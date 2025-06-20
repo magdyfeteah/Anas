@@ -32,6 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool onMic = true;
   bool isRecording = false;
   bool isProcessing = false; // Track processing state
+  bool quantumOn = false;
   final AudioRecorder audioRecorder = AudioRecorder();
   final AudioPlayer audioPlayer = AudioPlayer(); // Audio player instance
   String? recordingPath;
@@ -84,7 +85,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final response = await http.post(
       url,
       body: jsonEncode({"question": textController.text}),
-      headers: {"Content-Type":"application/json"}
+      headers: {"Content-Type": "application/json"},
     );
     print(response.body);
 
@@ -102,18 +103,18 @@ class _HomeScreenState extends State<HomeScreen> {
     final response = await http.post(
       url,
       body: jsonEncode({"answer": answer}),
-      headers: {"Content-Type":"application/json"}
+      headers: {"Content-Type": "application/json"},
     );
 
-        final base64Str =  response.body;
-        final bytesReplaced = base64Str.replaceAll('"', '');
-        final bytes = base64Decode(bytesReplaced);
-        final tempDir = await getTemporaryDirectory();
-        final tempFile = File('${tempDir.path}/response_audio.wav');
-        await tempFile.writeAsBytes(bytes);
-        await audioPlayer.play(DeviceFileSource(tempFile.path));
-    
+    final base64Str = response.body;
+    final bytesReplaced = base64Str.replaceAll('"', '');
+    final bytes = base64Decode(bytesReplaced);
+    final tempDir = await getTemporaryDirectory();
+    final tempFile = File('${tempDir.path}/response_audio.wav');
+    await tempFile.writeAsBytes(bytes);
+    await audioPlayer.play(DeviceFileSource(tempFile.path));
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -128,12 +129,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   // Header
-                  
                   Center(
                     child: Column(
                       children: [
                         Text(
-                          answer ?? 'مرحباً، أنا أنس\nوأنا هنا لمساعدتك.',
+                          answer ?? 'مرحباً، أنا أنس\n.وأنا هنا لمساعدتك',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: Colors.white,
@@ -145,7 +145,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                   ),
-              
+
                   // Main Section
                   if (onMic)
                     Container(
@@ -215,7 +215,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ],
                     ),
-              
+
                   // Footer
                   Column(
                     children: [
@@ -253,21 +253,57 @@ class _HomeScreenState extends State<HomeScreen> {
                               }
                             }
                           },
-                          child: Container(
-                            padding: EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color:
-                                  isRecording ? Colors.red : Color(0xFFD9D9D9),
-                              shape: BoxShape.circle,
-                            ),
-                            child: SvgPicture.asset(
-                              isRecording
-                                  ? 'assets/images/close.svg'
-                                  : 'assets/images/microphone.svg',
-                              width: 40,
-                              height: 40,
-                              color: Color(0xFF1A1818),
-                            ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              // Mic / Close Button
+                              GestureDetector(
+                                onTap:
+                                    () => setState(
+                                      () => isRecording = !isRecording,
+                                    ),
+                                child: Container(
+                                  padding: EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color:
+                                        isRecording
+                                            ? Colors.red
+                                            : Color(0xFFD9D9D9),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: SvgPicture.asset(
+                                    isRecording
+                                        ? 'assets/images/close.svg'
+                                        : 'assets/images/microphone.svg',
+                                    width: 40,
+                                    height: 40,
+                                    color: Color(0xFF1A1818),
+                                  ),
+                                ),
+                              ),
+
+                              // Quantum Button
+                              GestureDetector(
+                                onTap:
+                                    () =>
+                                        setState(() => quantumOn = !quantumOn),
+                                child: Container(
+                                  padding: EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: Color(0xFF1A1818),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: SvgPicture.asset(
+                                    quantumOn
+                                        ? 'assets/images/on-button.svg'
+                                        : 'assets/images/off-button.svg',
+                                    width: 40,
+                                    height: 40,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       SizedBox(height: 20),
@@ -280,51 +316,51 @@ class _HomeScreenState extends State<HomeScreen> {
                           color: Color(0xFFD9D9D9),
                           borderRadius: BorderRadius.circular(15),
                         ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            GestureDetector(
-                              onTap: () => setState(() => onMic = true),
-                              child: Container(
-                                padding: EdgeInsets.all(15),
-                                decoration:
-                                    onMic
-                                        ? BoxDecoration(
-                                          color: Color(0xFF1A1818),
-                                          shape: BoxShape.circle,
-                                        )
-                                        : null,
-                                child: SvgPicture.asset(
-                                  'assets/images/mic.svg',
-                                  width: 30,
-                                  height: 30,
-                                  color:
-                                      onMic ? Colors.white : Color(0xFF1A1818),
-                                ),
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: () => setState(() => onMic = false),
-                              child: Container(
-                                padding: EdgeInsets.all(15),
-                                decoration:
-                                    !onMic
-                                        ? BoxDecoration(
-                                          color: Color(0xFF1A1818),
-                                          shape: BoxShape.circle,
-                                        )
-                                        : null,
-                                child: SvgPicture.asset(
-                                  'assets/images/chat.svg',
-                                  width: 30,
-                                  height: 30,
-                                  color:
-                                      onMic ? Color(0xFF1A1818) : Colors.white,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                        // child: Row(
+                        //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        //   children: [
+                        //     GestureDetector(
+                        //       onTap: () => setState(() => onMic = true),
+                        //       child: Container(
+                        //         padding: EdgeInsets.all(15),
+                        //         decoration:
+                        //             onMic
+                        //                 ? BoxDecoration(
+                        //                   color: Color(0xFF1A1818),
+                        //                   shape: BoxShape.circle,
+                        //                 )
+                        //                 : null,
+                        //         child: SvgPicture.asset(
+                        //           'assets/images/mic.svg',
+                        //           width: 30,
+                        //           height: 30,
+                        //           color:
+                        //               onMic ? Colors.white : Color(0xFF1A1818),
+                        //         ),
+                        //       ),
+                        //     ),
+                        //     GestureDetector(
+                        //       onTap: () => setState(() => onMic = false),
+                        //       child: Container(
+                        //         padding: EdgeInsets.all(15),
+                        //         decoration:
+                        //             !onMic
+                        //                 ? BoxDecoration(
+                        //                   color: Color(0xFF1A1818),
+                        //                   shape: BoxShape.circle,
+                        //                 )
+                        //                 : null,
+                        //         child: SvgPicture.asset(
+                        //           'assets/images/chat.svg',
+                        //           width: 30,
+                        //           height: 30,
+                        //           color:
+                        //               onMic ? Color(0xFF1A1818) : Colors.white,
+                        //         ),
+                        //       ),
+                        //     ),
+                        //   ],
+                        // ),
                       ),
                     ],
                   ),

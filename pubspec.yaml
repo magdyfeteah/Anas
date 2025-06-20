@@ -74,6 +74,8 @@ flutter:
     - assets/images/addFile.svg
     - assets/images/calendar.svg
     - assets/images/chat.svg
+    - assets/images/off-button.svg
+    - assets/images/on-button.svg
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg
