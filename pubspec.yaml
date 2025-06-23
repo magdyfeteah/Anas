@@ -45,7 +45,6 @@ dependencies:
   audioplayers: ^6.4.0
   http_parser: ^4.1.2
   google_fonts: ^6.2.1
-  morphable_shape: ^2.0.0
   
 dev_dependencies:
   flutter_test:
