@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:anasai/anim_painter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
@@ -8,7 +9,7 @@ import 'package:http_parser/http_parser.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 import 'package:path/path.dart' as p;
-import 'package:audioplayers/audioplayers.dart'; // Add this import
+import 'package:audioplayers/audioplayers.dart';
 
 void main() => runApp(MyApp());
 
@@ -115,6 +116,17 @@ class _HomeScreenState extends State<HomeScreen> {
     await audioPlayer.play(DeviceFileSource(tempFile.path));
   }
 
+  String adaptiveText() {
+    if (answer != null) {
+      return answer!;
+    }
+    if (isRecording) {
+      return ".."
+          "سامعك";
+    }
+    return 'مرحباً، أنا أنس\n.وأنا هنا لمساعدتك';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -133,7 +145,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Column(
                       children: [
                         Text(
-                          answer ?? 'مرحباً، أنا أنس\n.وأنا هنا لمساعدتك',
+                          adaptiveText(),
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: Colors.white,
@@ -148,14 +160,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   // Main Section
                   if (onMic)
-                    Container(
-                      width: 200,
-                      height: 200,
-                      decoration: BoxDecoration(
-                        color: Color(0xFFD9D9D9),
-                        shape: BoxShape.circle,
-                      ),
-                    )
+                    AnimatedRecordingCircle(isRecording: isRecording)
                   else
                     Column(
                       children: [
@@ -215,17 +220,13 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ],
                     ),
-
-                  // Footer
                   Column(
                     children: [
                       if (onMic)
                         GestureDetector(
                           onTap: () async {
                             if (isRecording) {
-                              // Stop recording
                               String? filePath = await audioRecorder.stop();
-                              print("Stopped Filepath: ${filePath}");
                               if (filePath != null) {
                                 setState(() {
                                   isRecording = false;
@@ -236,7 +237,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ); // Send to server
                               }
                             } else {
-                              // Start recording
                               if (await audioRecorder.hasPermission()) {
                                 final appDirectory =
                                     await getDownloadsDirectory();
@@ -256,19 +256,16 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              // Mic / Close Button
                               GestureDetector(
-                                onTap:
-                                    () => setState(
-                                      () => isRecording = !isRecording,
-                                    ),
-                                child: Container(
+                                onTap: () =>
+                                    setState(() => isRecording = !isRecording),
+                                child: AnimatedContainer(
+                                  duration: Duration(milliseconds: 300),
                                   padding: EdgeInsets.all(10),
                                   decoration: BoxDecoration(
-                                    color:
-                                        isRecording
-                                            ? Colors.red
-                                            : Color(0xFFD9D9D9),
+                                    color: isRecording
+                                        ? Colors.red
+                                        : Color(0xFFD9D9D9),
                                     shape: BoxShape.circle,
                                   ),
                                   child: SvgPicture.asset(
@@ -277,16 +274,18 @@ class _HomeScreenState extends State<HomeScreen> {
                                         : 'assets/images/microphone.svg',
                                     width: 40,
                                     height: 40,
-                                    color: Color(0xFF1A1818),
+                                    colorFilter: ColorFilter.mode(
+                                      Color(0xFF1A1818),
+                                      BlendMode.srcIn,
+                                    ),
                                   ),
                                 ),
                               ),
 
                               // Quantum Button
                               GestureDetector(
-                                onTap:
-                                    () =>
-                                        setState(() => quantumOn = !quantumOn),
+                                onTap: () =>
+                                    setState(() => quantumOn = !quantumOn),
                                 child: Container(
                                   padding: EdgeInsets.all(10),
                                   decoration: BoxDecoration(
@@ -299,7 +298,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                         : 'assets/images/off-button.svg',
                                     width: 40,
                                     height: 40,
-                                    color: Colors.white,
+                                    colorFilter: ColorFilter.mode(
+                                      Colors.white,
+                                      BlendMode.srcIn,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -316,51 +318,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           color: Color(0xFFD9D9D9),
                           borderRadius: BorderRadius.circular(15),
                         ),
-                        // child: Row(
-                        //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        //   children: [
-                        //     GestureDetector(
-                        //       onTap: () => setState(() => onMic = true),
-                        //       child: Container(
-                        //         padding: EdgeInsets.all(15),
-                        //         decoration:
-                        //             onMic
-                        //                 ? BoxDecoration(
-                        //                   color: Color(0xFF1A1818),
-                        //                   shape: BoxShape.circle,
-                        //                 )
-                        //                 : null,
-                        //         child: SvgPicture.asset(
-                        //           'assets/images/mic.svg',
-                        //           width: 30,
-                        //           height: 30,
-                        //           color:
-                        //               onMic ? Colors.white : Color(0xFF1A1818),
-                        //         ),
-                        //       ),
-                        //     ),
-                        //     GestureDetector(
-                        //       onTap: () => setState(() => onMic = false),
-                        //       child: Container(
-                        //         padding: EdgeInsets.all(15),
-                        //         decoration:
-                        //             !onMic
-                        //                 ? BoxDecoration(
-                        //                   color: Color(0xFF1A1818),
-                        //                   shape: BoxShape.circle,
-                        //                 )
-                        //                 : null,
-                        //         child: SvgPicture.asset(
-                        //           'assets/images/chat.svg',
-                        //           width: 30,
-                        //           height: 30,
-                        //           color:
-                        //               onMic ? Color(0xFF1A1818) : Colors.white,
-                        //         ),
-                        //       ),
-                        //     ),
-                        //   ],
-                        // ),
                       ),
                     ],
                   ),
